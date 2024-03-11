@@ -1,0 +1,98 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-gsc-cbs-analy"
+		},
+		"ls_raw_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_raw'"
+		},
+		"ls_dbr_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0311-124530-xa9o9alp"
+		},
+		"ls_kv_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://deprojectgsckvanaly.vault.azure.net/"
+		},
+		"ls_raw_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adlsgsccbs.dfs.core.windows.net/"
+		},
+		"tgr_birthrate_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		},
+		"tgr_consumer_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		},
+		"tgr_inflation_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		},
+		"tgr_producer_confidence_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "adf-gsc-cbs-analy_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"ls_raw_accountKey": {
+						"value": "[parameters('ls_raw_accountKey')]"
+					},
+					"ls_kv_properties_typeProperties_baseUrl": {
+						"value": "[parameters('ls_kv_properties_typeProperties_baseUrl')]"
+					},
+					"ls_raw_properties_typeProperties_url": {
+						"value": "[parameters('ls_raw_properties_typeProperties_url')]"
+					},
+					"ls_dbr_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('ls_dbr_properties_typeProperties_existingClusterId')]"
+					},
+					"tgr_birthrate_properties_typeProperties_scope": {
+						"value": "[parameters('tgr_birthrate_properties_typeProperties_scope')]"
+					},
+					"tgr_consumer_properties_typeProperties_scope": {
+						"value": "[parameters('tgr_consumer_properties_typeProperties_scope')]"
+					},
+					"tgr_inflation_properties_typeProperties_scope": {
+						"value": "[parameters('tgr_inflation_properties_typeProperties_scope')]"
+					},
+					"tgr_producer_confidence_properties_typeProperties_scope": {
+						"value": "[parameters('tgr_producer_confidence_properties_typeProperties_scope')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

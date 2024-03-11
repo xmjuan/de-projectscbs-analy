@@ -1,0 +1,33 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-gsc-cbs-analy"
+		},
+		"ls_raw_accountKey": {
+			"value": ""
+		},
+		"ls_dbr_properties_typeProperties_existingClusterId": {
+			"value": "0311-124530-xa9o9alp"
+		},
+		"ls_kv_properties_typeProperties_baseUrl": {
+			"value": "https://deprojectgsckvanaly.vault.azure.net/"
+		},
+		"ls_raw_properties_typeProperties_url": {
+			"value": "https://adlsgsccbs.dfs.core.windows.net/"
+		},
+		"tgr_birthrate_properties_typeProperties_scope": {
+			"value": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		},
+		"tgr_consumer_properties_typeProperties_scope": {
+			"value": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		},
+		"tgr_inflation_properties_typeProperties_scope": {
+			"value": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		},
+		"tgr_producer_confidence_properties_typeProperties_scope": {
+			"value": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		}
+	}
+}

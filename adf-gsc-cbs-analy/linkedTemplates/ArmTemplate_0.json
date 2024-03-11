@@ -1,0 +1,646 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-gsc-cbs-analy"
+		},
+		"ls_raw_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_raw'"
+		},
+		"ls_kv_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://deprojectgsckvanaly.vault.azure.net/"
+		},
+		"ls_raw_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adlsgsccbs.dfs.core.windows.net/"
+		},
+		"ls_dbr_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0311-124530-xa9o9alp"
+		},
+		"tgr_birthrate_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		},
+		"tgr_consumer_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		},
+		"tgr_inflation_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		},
+		"tgr_producer_confidence_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_kv')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ls_kv_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_raw')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_raw_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_raw_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_raw_parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_raw",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"snapshotdate": {
+						"type": "string"
+					},
+					"filename": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@{dataset().filename}/snapshotdate=@{dataset().snapshotdate}",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_raw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_processed_parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_raw",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"snapshotdate": {
+						"type": "string"
+					},
+					"filename": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@{dataset().filename}/snapshotdate=@{dataset().snapshotdate}",
+							"type": "Expression"
+						},
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_raw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_dbr')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-3492012454070410.10.azuredatabricks.net",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_kv",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "dbrToken"
+					},
+					"existingClusterId": "[parameters('ls_dbr_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_kv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_delta')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLake",
+				"typeProperties": {
+					"domain": "https://adb-3492012454070410.10.azuredatabricks.net",
+					"clusterId": "0311-124530-xa9o9alp",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_kv",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "dbrToken"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_kv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/inflation_load')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Notebook1",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "bulk",
+							"baseParameters": {
+								"storage_account": {
+									"value": "@pipeline().globalParameters.storage_account",
+									"type": "Expression"
+								},
+								"snapshotdate": {
+									"value": "@formatDateTime(utcnow(), 'yyyy-MM-dd')",
+									"type": "Expression"
+								},
+								"input_container": {
+									"value": "@pipeline().globalParameters.output_container",
+									"type": "Expression"
+								},
+								"load_table": "cbs_bnl_ifl",
+								"scope_name": {
+									"value": "@pipeline().globalParameters.scope_name",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_dbr",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-03-11T20:16:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dbr')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_transformation_birthrate')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "birthrate transform",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Repos/j.juan1992@hotmail.com/de-projectscbs/databricks/birthrate_transformation",
+							"baseParameters": {
+								"storage_account": {
+									"value": "@pipeline().globalParameters.storage_account",
+									"type": "Expression"
+								},
+								"snapshotdate": {
+									"value": "@formatDateTime(utcnow(), 'yyyy-MM-dd')",
+									"type": "Expression"
+								},
+								"input_container": {
+									"value": "@pipeline().globalParameters.input_container",
+									"type": "Expression"
+								},
+								"output_container": {
+									"value": "@pipeline().globalParameters.output_container",
+									"type": "Expression"
+								},
+								"scope_name": {
+									"value": "@pipeline().globalParameters.scope_name",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_dbr",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "to_processed"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-03-11T20:16:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dbr')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_transformation_consumer_confidence')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "consumer confidence transform",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Repos/j.juan1992@hotmail.com/de-projectscbs/databricks/consumer_confidence_transformation",
+							"baseParameters": {
+								"storage_account": {
+									"value": "@pipeline().globalParameters.storage_account",
+									"type": "Expression"
+								},
+								"snapshotdate": {
+									"value": "@formatDateTime(utcnow(), 'yyyy-MM-dd')",
+									"type": "Expression"
+								},
+								"input_container": {
+									"value": "@pipeline().globalParameters.input_container",
+									"type": "Expression"
+								},
+								"output_container": {
+									"value": "@pipeline().globalParameters.output_container",
+									"type": "Expression"
+								},
+								"scope_name": {
+									"value": "@pipeline().globalParameters.scope_name",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_dbr",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "to_processed"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-03-11T20:16:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dbr')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_transformation_inflation')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "inflation transform",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Repos/j.juan1992@hotmail.com/de-projectscbs/databricks/inflation_transformation",
+							"baseParameters": {
+								"storage_account": {
+									"value": "@pipeline().globalParameters.storage_account",
+									"type": "Expression"
+								},
+								"snapshotdate": {
+									"value": "@formatDateTime(utcnow(), 'yyyy-MM-dd')",
+									"type": "Expression"
+								},
+								"input_container": {
+									"value": "@pipeline().globalParameters.input_container",
+									"type": "Expression"
+								},
+								"output_container": {
+									"value": "@pipeline().globalParameters.output_container",
+									"type": "Expression"
+								},
+								"scope_name": {
+									"value": "@pipeline().globalParameters.scope_name",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_dbr",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "to_processed"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-03-11T20:16:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dbr')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_transformation_producer_confidence')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "producer confidence transform",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Repos/j.juan1992@hotmail.com/de-projectscbs/databricks/producer_confidence_transformation",
+							"baseParameters": {
+								"storage_account": {
+									"value": "@pipeline().globalParameters.storage_account",
+									"type": "Expression"
+								},
+								"snapshotdate": {
+									"value": "@formatDateTime(utcnow(), 'yyyy-MM-dd')",
+									"type": "Expression"
+								},
+								"input_container": {
+									"value": "@pipeline().globalParameters.input_container",
+									"type": "Expression"
+								},
+								"output_container": {
+									"value": "@pipeline().globalParameters.output_container",
+									"type": "Expression"
+								},
+								"scope_name": {
+									"value": "@pipeline().globalParameters.scope_name",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_dbr",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "to_processed"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-03-11T20:16:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dbr')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_delta')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_delta",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLakeDataset",
+				"typeProperties": {
+					"database": "cbs_macroeconomics"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_delta')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tgr_birthrate')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_transformation_birthrate",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "BlobEventsTrigger",
+				"typeProperties": {
+					"blobPathBeginsWith": "/raw/blobs/birthrate/",
+					"blobPathEndsWith": ".parquet",
+					"ignoreEmptyBlobs": true,
+					"scope": "[parameters('tgr_birthrate_properties_typeProperties_scope')]",
+					"events": [
+						"Microsoft.Storage.BlobCreated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_transformation_birthrate')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tgr_consumer')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_transformation_consumer_confidence",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "BlobEventsTrigger",
+				"typeProperties": {
+					"blobPathBeginsWith": "/raw/blobs/consumer_confidence/",
+					"blobPathEndsWith": ".parquet",
+					"ignoreEmptyBlobs": true,
+					"scope": "[parameters('tgr_consumer_properties_typeProperties_scope')]",
+					"events": [
+						"Microsoft.Storage.BlobCreated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_transformation_consumer_confidence')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tgr_inflation')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_transformation_inflation",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "BlobEventsTrigger",
+				"typeProperties": {
+					"blobPathBeginsWith": "/raw/blobs/inflation/",
+					"blobPathEndsWith": ".parquet",
+					"ignoreEmptyBlobs": true,
+					"scope": "[parameters('tgr_inflation_properties_typeProperties_scope')]",
+					"events": [
+						"Microsoft.Storage.BlobCreated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_transformation_inflation')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tgr_producer_confidence')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_transformation_producer_confidence",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "BlobEventsTrigger",
+				"typeProperties": {
+					"blobPathBeginsWith": "/raw/blobs/producer_confidence/",
+					"blobPathEndsWith": ".parquet",
+					"ignoreEmptyBlobs": true,
+					"scope": "[parameters('tgr_producer_confidence_properties_typeProperties_scope')]",
+					"events": [
+						"Microsoft.Storage.BlobCreated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_transformation_producer_confidence')]"
+			]
+		}
+	]
+}

@@ -1,0 +1,18 @@
+{
+	"storage_account": {
+		"type": "string",
+		"value": "adlsgsccbs"
+	},
+	"input_container": {
+		"type": "string",
+		"value": "raw"
+	},
+	"output_container": {
+		"type": "string",
+		"value": "processed"
+	},
+	"scope_name": {
+		"type": "string",
+		"value": "cbs_analy_secret_scope"
+	}
+}
