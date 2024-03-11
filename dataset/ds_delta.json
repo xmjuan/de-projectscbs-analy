@@ -1,0 +1,16 @@
+{
+	"name": "ds_delta",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_delta",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureDatabricksDeltaLakeDataset",
+		"typeProperties": {
+			"database": "cbs_macroeconomics"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

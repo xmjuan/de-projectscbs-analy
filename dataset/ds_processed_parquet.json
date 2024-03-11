@@ -1,0 +1,32 @@
+{
+	"name": "ds_processed_parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_raw",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"snapshotdate": {
+				"type": "string"
+			},
+			"filename": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@{dataset().filename}/snapshotdate=@{dataset().snapshotdate}",
+					"type": "Expression"
+				},
+				"fileSystem": "processed"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,29 @@
+{
+	"name": "adf-gsc-cbs-analy",
+	"properties": {
+		"globalParameters": {
+			"storage_account": {
+				"type": "string",
+				"value": "adlsgsccbs"
+			},
+			"input_container": {
+				"type": "string",
+				"value": "raw"
+			},
+			"output_container": {
+				"type": "string",
+				"value": "processed"
+			},
+			"scope_name": {
+				"type": "string",
+				"value": "cbs_analy_secret_scope"
+			}
+		}
+	},
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "3f6b66c4-22a1-4134-b4cd-014d939b08d5",
+		"tenantId": "058ec02b-7394-4cc3-b1d6-3b7a54334e18"
+	}
+}

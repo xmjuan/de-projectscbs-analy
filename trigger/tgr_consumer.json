@@ -1,0 +1,25 @@
+{
+	"name": "tgr_consumer",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_transformation_consumer_confidence",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/raw/blobs/consumer_confidence/",
+			"blobPathEndsWith": ".parquet",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/5d4bcfbd-a75d-46fb-be12-c526eb918caa/resourceGroups/deprojectsgsccbs/providers/Microsoft.Storage/storageAccounts/adlsgsccbs",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}
