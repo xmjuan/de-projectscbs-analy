@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Notebook1",
+				"name": "inflation_load",
 				"type": "DatabricksNotebook",
 				"dependsOn": [],
 				"policy": {
@@ -15,7 +15,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "bulk",
+					"notebookPath": "/Repos/j.juan1992@hotmail.com/de-projectscbs/databricks/_init_load_inflation",
 					"baseParameters": {
 						"storage_account": {
 							"value": "@pipeline().globalParameters.storage_account",
@@ -29,7 +29,6 @@
 							"value": "@pipeline().globalParameters.output_container",
 							"type": "Expression"
 						},
-						"load_table": "cbs_bnl_ifl",
 						"scope_name": {
 							"value": "@pipeline().globalParameters.scope_name",
 							"type": "Expression"
@@ -42,6 +41,9 @@
 				}
 			}
 		],
+		"folder": {
+			"name": "to_deltaTable"
+		},
 		"annotations": [],
 		"lastPublishTime": "2024-03-11T20:16:28Z"
 	},
